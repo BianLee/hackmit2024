@@ -1,13 +1,13 @@
 "use client"
 
-
 import React from 'react';
 import { useRouter } from 'next/navigation';
-// import { SignInButton } from '@clerk/nextjs';
+import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
 
 export default function GameLandingPage() {
   const router = useRouter();
+  const { isSignedIn, user } = useUser();
 
   const handleAnonymousPlay = () => {
     router.push('/game');
@@ -23,11 +23,27 @@ export default function GameLandingPage() {
         >
           Play Anonymously
         </Button>
-        {/* <SignInButton mode="modal"> */}
-          <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-            Sign In to Play
-          </Button>
-        {/* </SignInButton> */}
+        {isSignedIn ? (
+          <div className="space-y-4">
+            <Button 
+              onClick={() => router.push('/game')}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+            >
+              Play as {user.firstName || 'User'}
+            </Button>
+            <SignOutButton>
+              <Button className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                Sign Out
+              </Button>
+            </SignOutButton>
+          </div>
+        ) : (
+          <SignInButton mode="modal">
+            <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+              Sign In to Play
+            </Button>
+          </SignInButton>
+        )}
       </div>
     </div>
   );
