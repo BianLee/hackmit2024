@@ -4,6 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function GameLandingPage() {
   const router = useRouter();
