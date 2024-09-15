@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/api';
+import { supabase } from '../../lib/supabaseClient';
 
 // Check if user is in database already. If not, insert them.
 export default async function handler(req, res) {

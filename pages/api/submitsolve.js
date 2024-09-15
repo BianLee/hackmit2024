@@ -1,6 +1,6 @@
 import { BorderAllIcon } from '@radix-ui/react-icons';
 import { Users } from 'lucide-react';
-import { supabase } from '../../lib/api';
+import { supabase } from '../../lib/supabaseClient';
 
 // Submit solve data from user
 export default async function handler(req, res) {
