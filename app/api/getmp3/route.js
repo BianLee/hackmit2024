@@ -51,7 +51,7 @@ export default function GamePage() {
 
       setCurrentSong(songData);
 
-      if (diff !== 'music-legend') {
+      if (diff !== 'legend') {
         // For multiple-choice difficulties, generate choices
         const choices = await generateChoices(songData.genres.lower(), diff);
         setChoices(choices);
@@ -125,14 +125,14 @@ export default function GamePage() {
       easy: 'easy_solves',
       medium: 'medium_solves',
       hard: 'hard_solves',
-      'music-legend': 'legend_solves',
+      'legend': 'legend_solves',
     }[difficulty];
 
     const highScoreColumn = {
       easy: 'high_easy',
       medium: 'high_medium',
       hard: 'high_hard',
-      'music-legend': 'high_legend',
+      'legend': 'high_legend',
     }[difficulty];
 
     // Fetch current user data
@@ -172,7 +172,7 @@ export default function GamePage() {
       {currentSong && (
         <>
           <audio src={currentSong.url} controls autoPlay />
-          {difficulty === 'music-legend' ? (
+          {difficulty === 'legend' ? (
             <input
               type="text"
               placeholder="Enter the genre"
