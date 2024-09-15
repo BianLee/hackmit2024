@@ -83,6 +83,13 @@ export default function GameLandingPage() {
             </SignInButton>
           </>
         )}
+        {isSignedIn && (
+        <div className="absolute top-4 right-4">
+          <Button onClick={() => router.push('/profile')} className="bg-gray-500">
+            Profile
+          </Button>
+        </div>
+      )}
       </div>
     </div>
   );

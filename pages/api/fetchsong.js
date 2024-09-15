@@ -1,5 +1,16 @@
 import { supabase } from '../../lib/supabaseClient';
 
+const easy_genres = [
+    'Electronic',
+    'Country',
+    'Classical',
+    'Reggae',
+    'Jazz',
+    'Hip-Hop',
+    'Rock',
+    'Pop'
+];
+
 // Request new song from backend
 export default async function handler(req, res) {
     if (req.method == "GET") {
@@ -34,6 +45,19 @@ export default async function handler(req, res) {
         .from('Songs')
         .select('*')
         .eq('difficulty', difficulty)
+
+        if (songs.length != 0) {
+            const randomIndex = Math.floor(Math.random() * songs.length);
+
+            const correct_song = songs[randomIndex];
+
+            const { data: newUserSong, error: updateSongError } = await supabase
+            .from('Users')
+            .update({"current_correct": correct_song.genres})
+            .eq('id', data['id']);
+        } else {
+            res.status(500).json({ success: false, message: 'No songs found' });
+        }
 
         res.status(200).json(data);
     } else {

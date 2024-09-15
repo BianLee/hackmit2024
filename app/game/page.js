@@ -32,7 +32,9 @@ export default function GamePage() {
   const fetchSong = async (diff) => {
     console.log('Fetching song for difficulty:', diff);
     try {
-      let songQuery = supabase.from('Songs').select('*');
+      let songQuery = supabase.from('Songs')
+      .select('*')
+      .eq('difficulty', diff);
 
       // Fetch all songs from the database
       const { data: songsData, error } = await songQuery;
