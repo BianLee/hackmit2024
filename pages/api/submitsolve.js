@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
         if (user.current_correct == input) {
             const newSolves = user.current_solves + 1;
-            const diffSolves = 0;
+            let diffSolves = 0;
             if (user.current_difficulty.includes("easy")) {
                 diffSolves = user.easy_solves + 1;
             } else if (user.current_difficulty.includes("medium")) {
@@ -32,7 +32,7 @@ export default async function handler(req, res) {
                 diffSolves = user.legend_solves + 1;
             } 
             
-            const newDiff = user.current_difficulty;
+            let newDiff = user.current_difficulty;
             if (user.current_difficulty.includes("increasing")) {
                 if (newSolves % 3 == 0) {
                     if (user.current_difficulty.includes("easy")) {
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
             res.status(200).json({ success: true, message: 'Correct' });
         } else {
             if (user.current_difficulty.includes("increasing")) {
-
+                //if (user.current_solves > user.high_increasing)
             }
 
             const { data: newUser, error: insertError } = await supabase
