@@ -125,7 +125,7 @@ export default function GamePage() {
         // For 'music-legend', set the correct answer in the user's data
         if (isSignedIn) {
           await supabase
-            .from('users')
+            .from('Users')
             .update({
               current_correct: songData.genres,
               current_difficulty: diff,
@@ -252,23 +252,23 @@ export default function GamePage() {
   };
 
   const updateUserStats = async () => {
-    /*const columnToUpdate = {
+    const columnToUpdate = {
       easy: 'easy_solves',
       medium: 'medium_solves',
       hard: 'hard_solves',
       'legend': 'legend_solves',
-    }[difficulty];*/
+    }[difficulty];
 
-    //const highScoreColumn = {
-      //easy: 'high_easy',
-      //medium: 'high_medium',
-      //hard: 'high_hard',
-      //'legend': 'high_legend',
-    //}[difficulty];
+    const highScoreColumn = {
+      easy: 'high_easy',
+      medium: 'high_medium',
+      hard: 'high_hard',
+      'legend': 'high_legend',
+    }[difficulty];
 
     // Fetch current user data
     const { data: userData, error } = await supabase
-      .from('users')
+      .from('Users')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -286,7 +286,7 @@ export default function GamePage() {
     }
 
     const { error: updateError } = await supabase
-      .from('users')
+      .from('Users')
       .update(updates)
       .eq('id', user.id);
 

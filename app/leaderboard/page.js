@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       console.log('Fetching leaderboard data from Supabase');
       const { data: users, error } = await supabase
-        .from('users')
+        .from('Users')
         .select('name, high_easy')
         .order('high_easy', { ascending: false })
         .limit(10);

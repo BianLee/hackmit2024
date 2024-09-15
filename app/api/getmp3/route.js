@@ -137,7 +137,7 @@ export default function GamePage() {
 
     // Fetch current user data
     const { data: userData, error } = await supabase
-      .from('users')
+      .from('Users')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -155,7 +155,7 @@ export default function GamePage() {
     }
 
     const { error: updateError } = await supabase
-      .from('users')
+      .from('Users')
       .update(updates)
       .eq('id', user.id);
 

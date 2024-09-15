@@ -22,7 +22,7 @@ export default function ProfilePage() {
     const fetchUserData = async () => {
       console.log('Fetching user data from Supabase for user ID:', user.id);
       const { data: existingUser, error } = await supabase
-        .from('users')
+        .from('Users')
         .select('*')
         .eq('id', user.id)
         .single();
@@ -32,7 +32,7 @@ export default function ProfilePage() {
           // User doesn't exist, create a new one
           console.log('User not found in Supabase, creating new user');
           const { data: newUser, error: insertError } = await supabase
-            .from('users')
+            .from('Users')
             .insert({
               id: user.id,
               name: user.username || user.firstName || 'Anonymous',
