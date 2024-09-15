@@ -52,13 +52,32 @@ export default async function handler(req, res) {
 
             res.status(200).json({ success: true, message: 'Correct' });
         } else {
+            let diffUpdate = "";
             if (user.current_difficulty.includes("increasing")) {
-                //if (user.current_solves > user.high_increasing)
+                if (user.current_solves > user.high_increasing) {
+                    diffUpdate += "_increasing";
+                }
+            } else if (user.current_difficulty.includes("legend")) {
+                if (user.current_solves > user.high_legend) {
+                    diffUpdate += "_legend";
+                }
+            } else if (user.current_difficulty.includes("hard")) {
+                if (user.current_solves > user.high_hard) {
+                    diffUpdate += "_hard";
+                }
+            } else if (user.current_difficulty.includes("medium")) {
+                if (user.current_solves > user.high_medium) {
+                    diffUpdate += "_medium";
+                }
+            }  else if (user.current_difficulty.includes("easy")) {
+                if (user.current_solves > user.high_easy) {
+                    diffUpdate += "_easy";
+                }
             }
 
             const { data: newUser, error: insertError } = await supabase
             .from('Users')
-            .update({"current_correct": "", "current_difficulty": "", "current_solves": 0 })
+            .update({"current_correct": "", "current_difficulty": "", "current_solves": 0, diffUpdate: user.current_solves })
             .eq('id', id);
 
             res.status(200).json({success: true, message: 'Incorrect'});
