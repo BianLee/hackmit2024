@@ -22,7 +22,7 @@ export default function GameOverPage() {
 
   const handlePlayAgain = () => {
     console.log('Play Again button clicked');
-    router.push(`/game?difficulty=${difficulty}`);
+    router.push(`/game?difficulty=${difficulty}&first=1`);
   };
 
   const handleLeaderboard = () => {

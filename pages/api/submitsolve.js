@@ -7,6 +7,8 @@ export default async function handler(req, res) {
     if (req.method == "POST") {
         const {id, input} = req.body;
 
+        console.log("Request: " + req.body)
+
         // By this time, current_answer in the database should be the actual expected answer.
         const { data: user, error: fetchError } = await supabase
         .from('Users')
@@ -19,8 +21,9 @@ export default async function handler(req, res) {
             throw fetchError;
         }
 
-        if (user.current_correct == input) {
+        if (user.current_correct.split(';').sort().join(';') == input.split(';').sort().join(';')) {
             const newSolves = user.current_solves + 1;
+            console.log(newSolves);
             let diffSolves = 0;
             if (user.current_difficulty.includes("easy")) {
                 diffSolves = user.easy_solves + 1;
@@ -31,6 +34,7 @@ export default async function handler(req, res) {
             } else if (user.current_difficulty.includes("legend")) {
                 diffSolves = user.legend_solves + 1;
             } 
+            console.log(diffSolves);
             
             let newDiff = user.current_difficulty;
             if (user.current_difficulty.includes("increasing")) {
@@ -45,14 +49,18 @@ export default async function handler(req, res) {
                 }
             }
             const diffTable = user.current_difficulty + "_solves";
+            console.log(diffTable);
             const { data: newUser, error: insertError } = await supabase
             .from('Users')
-            .update({diffTable: diffSolves, "current_difficulty": newDiff, "current_solves": newSolves })
+            .update({[diffTable]: diffSolves, "current_difficulty": newDiff, "current_solves": newSolves })
             .eq('id', id);
+
+            if (insertError)
+                throw(insertError);
 
             res.status(200).json({ success: true, message: 'Correct' });
         } else {
-            let diffUpdate = "";
+            let diffUpdate = "high";
             if (user.current_difficulty.includes("increasing")) {
                 if (user.current_solves > user.high_increasing) {
                     diffUpdate += "_increasing";
@@ -75,9 +83,11 @@ export default async function handler(req, res) {
                 }
             }
 
+            console.log("Reset on fail.");
+
             const { data: newUser, error: insertError } = await supabase
             .from('Users')
-            .update({"current_correct": "", "current_difficulty": "", "current_solves": 0, diffUpdate: user.current_solves })
+            .update({"current_correct": "None", "current_difficulty": "easy", "current_solves": 0, [diffUpdate]: user.current_solves })
             .eq('id', id);
 
             res.status(200).json({success: true, message: 'Incorrect'});

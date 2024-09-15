@@ -42,12 +42,14 @@ function shuffleArray(array) {
 export default async function handler(req, res) {
     if (req.method == "GET") {
         const data = req.query;
+        let difficulty = data['difficulty'] || '';
         // If we just started game, we need to update difficulty & curr solves in database
-        if (data['first_song'] && data['difficulty']) {
+        if (data['firstSong'] && data['difficulty']) {
             const { data: newUser, error: insertError } = await supabase
             .from('Users')
             .update({"current_difficulty": data['difficulty'], "current_solves": 0 })
             .eq('id', data['id']);
+
 
             if (insertError) {
                 throw(insertError);
@@ -65,7 +67,7 @@ export default async function handler(req, res) {
             throw(fetchError);
         }
 
-        let difficulty = user['current_difficulty'];
+        difficulty = difficulty != '' ? difficulty : user['current_difficulty'];
 
         // Get random song from database with provided difficulty
         const { data: songs, error: fetchSongError } = await supabase

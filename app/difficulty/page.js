@@ -14,7 +14,7 @@ export default function DifficultySelectionPage() {
 
   const handleDifficultySelect = (difficulty) => {
     console.log('Difficulty selected:', difficulty);
-    router.push(`/game?difficulty=${difficulty}`);
+    router.push(`/game?difficulty=${difficulty}&first=1`);
   };
 
   return (

@@ -1,311 +1,111 @@
-// app/game/page.js
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabaseClient';
 
 export default function GamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isSignedIn, user } = useUser();
 
-  const [currentSong, setCurrentSong] = useState(null);
   const [choices, setChoices] = useState([]);
-  const [difficulty, setDifficulty] = useState('easy');
+  const [audioUrl, setAudioUrl] = useState('');
+  const [loading, setLoading] = useState(true);
   const [score, setScore] = useState(0);
-  const [userInput, setUserInput] = useState('');
+  const [numChoices, setNumChoices] = useState(1);
+  const [selectedChoices, setSelectedChoices] = useState([]); // For easy/med/hard
+  const [userInput, setUserInput] = useState(''); // For legend
+  const [diff, setDiff] = useState('easy');
+  const [first, setFirst] = useState(1);
 
-  // Define common and obscure genres
-  const commonGenres = ['pop', 'rock', 'hip hop', 'jazz', 'classical', 'country', 'electronic', 'reggae'];
-  const obscureGenres = ['ambient', 'krautrock', 'synthwave', 'glitch hop', 'math rock', 'shoegaze', 'vaporwave'];
+  const fetchSong = async () => {
+    try {
+      const res = await fetch(`/api/fetchsong?difficulty=${diff}&firstRequest=${first}&id=${user.id}`);
+      const data = await res.json();
+
+      // Update state with choices and audio URL
+      setChoices(data.choices || []);
+      console.log(data.choices);
+      setAudioUrl(data.audio || '');
+      console.log(audioUrl);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching song:', err);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const diff = searchParams.get('difficulty') || 'easy';
-    setDifficulty(diff);
-    console.log('GamePage mounted with difficulty:', diff);
-    fetchSong(diff);
-  }, [searchParams]);
+    const difficulty = searchParams.get('difficulty') || '';
+    setDiff(difficulty);
+    setNumChoices(diff === 'easy' ? 1 : 2);
+    console.log(numChoices);
+    setFirst(searchParams.get('first') == true ? 1 : 0);
 
-  const fetchSong = async (diff) => {
-    console.log('Fetching song for difficulty:', diff);
-    try {
-      let songQuery = supabase.from('Songs')
-      .select('*')
-      .eq('difficulty', diff);
+    if (isSignedIn)
+      fetchSong();
 
-      // Fetch all songs from the database
-      const { data: songsData, error } = await songQuery;
+  }, [searchParams, isSignedIn]);
 
-      if (error) {
-        console.error('Error fetching songs from Supabase:', error);
-        return;
-      }
+  // Handle button selection (toggle logic)
+  const handleToggleChoice = (choice) => {
+    if (selectedChoices.includes(choice)) {
+      // If already selected, deselect
+      setSelectedChoices(selectedChoices.filter((c) => c !== choice));
+    } else if (selectedChoices.length < numChoices) {
+      // If not selected and the number of selections is below the limit, select
+      setSelectedChoices([...selectedChoices, choice]);
+    }
+  };
 
-      if (!songsData || songsData.length === 0) {
-        console.error('No songs found in the database');
-        return;
-      }
+  // Handle submit
+  const handleSubmit = async () => {
+    if (selectedChoices.length === numChoices || diff === 'legend') {
+      const genres = diff === 'legend' ? userInput : selectedChoices.join(';');
+      genres.replaceAll(' ', ';');
 
-      // Filter songs based on difficulty
-      let filteredSongs = [];
-
-      if (diff === 'easy') {
-        // Songs with common genres
-        filteredSongs = songsData.filter((song, index) => {
-          console.log(`Processing song at index ${index}:`, song);
-
-          if (!song.genres) {
-            console.warn(`Warning: Song at index ${index} has undefined genres. Skipping this song.`);
-            return false; // Exclude this song from the filtered list
-          }
-
-          const genresArray = song.genres.split(';').map((g) => g.trim().toLowerCase());
-          return genresArray.some((genre) => commonGenres.includes(genre));
+      try {
+        const response = await fetch('/api/submitsolve', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: user.id, input: genres }),
         });
-      } else if (diff === 'medium') {
-        // Songs with no more than 2 genres
-        filteredSongs = songsData.filter((song, index) => {
-          console.log(`Processing song at index ${index}:`, song);
-
-          if (!song.genres) {
-            console.warn(`Warning: Song at index ${index} has undefined genres. Skipping this song.`);
-            return false;
-          }
-
-          const genresArray = song.genres.split(';').map((g) => g.trim());
-          return genresArray.length <= 2;
-        });
-      } else if (diff === 'hard' || diff === 'legend') {
-        // Songs with obscure genres and 3+ genres
-        filteredSongs = songsData.filter((song, index) => {
-          console.log(`Processing song at index ${index}:`, song);
-
-          if (!song.genres) {
-            console.warn(`Warning: Song at index ${index} has undefined genres. Skipping this song.`);
-            return false;
-          }
-
-          const genresArray = song.genres.split(';').map((g) => g.trim().toLowerCase());
-          return genresArray.length >= 3 && genresArray.some((genre) => obscureGenres.includes(genre));
-        });
-      } else {
-        // Default to 'easy' if difficulty is unrecognized
-        filteredSongs = songsData.filter((song, index) => {
-          console.log(`Processing song at index ${index}:`, song);
-
-          if (!song.genres) {
-            console.warn(`Warning: Song at index ${index} has undefined genres. Skipping this song.`);
-            return false;
-          }
-
-          const genresArray = song.genres.split(';').map((g) => g.trim().toLowerCase());
-          return genresArray.some((genre) => commonGenres.includes(genre));
-        });
-      }
-
-      if (filteredSongs.length === 0) {
-        console.error('No songs found for difficulty:', diff);
-        return;
-      }
-
-      // Get a random song from the filtered list
-      const randomIndex = Math.floor(Math.random() * filteredSongs.length);
-      const songData = filteredSongs[randomIndex];
-
-      console.log('Song data received:', songData);
-
-      setCurrentSong(songData);
-
-      if (diff !== 'legend') {
-        // For multiple-choice difficulties, generate choices
-        const choices = await generateChoices(songData.genres, diff);
-        setChoices(choices);
-      } else {
-        // For 'music-legend', set the correct answer in the user's data
-        if (isSignedIn) {
-          await supabase
-            .from('Users')
-            .update({
-              current_correct: songData.genres,
-              current_difficulty: diff,
-              current_solves: score,
-            })
-            .eq('id', user.id);
+  
+        const result = await response.json();
+  
+        if (result.success && result.message === 'Correct') {
+          console.log('Answer is correct');
+          setScore(score + 1);
+          setSelectedChoices([]);
+          setUserInput('');
+          setAudioUrl('');
+          setChoices([]);
+          //router.replace(`/game?difficulty=${diff}&first=0`);
+          setLoading(true);
+          fetchSong();
+        } else {
+          console.log('Answer is incorrect');
+          router.push(`/game-over?score=${score}&difficulty=${diff}`);
         }
+      } catch (error) {
+        console.error('Error submitting answer:', error);
       }
-
-    } catch (error) {
-      console.error('Error fetching song:', error);
     }
   };
 
-  const generateChoices = async (correctGenresString, diff) => {
-    try {
-      let genresList = [];
-
-      // Determine genres to use based on difficulty
-      if (diff === 'easy') {
-        genresList = commonGenres;
-      } else if (diff === 'medium') {
-        // Fetch genres from songs with no more than 2 genres
-        const { data: songsData, error } = await supabase
-          .from('Songs')
-          .select('genres');
-
-        if (error) {
-          console.error('Error fetching genres from Supabase:', error);
-          return [];
-        }
-
-        // Get genres from songs with <= 2 genres
-        const genresSet = new Set();
-        songsData.forEach((song) => {
-          if (!song.genres) return;
-          const genresArray = song.genres.split(';').map((g) => g.trim());
-          if (genresArray.length <= 2) {
-            genresArray.forEach((genre) => genresSet.add(genre));
-          }
-        });
-        genresList = Array.from(genresSet);
-      } else if (diff === 'hard') {
-        genresList = obscureGenres;
-      }
-
-      // Exclude the correct genres
-      const correctGenres = correctGenresString.split(';').map((g) => g.trim());
-      const filteredGenres = genresList.filter((genre) => !correctGenres.includes(genre));
-
-      // Shuffle and pick random genres
-      const shuffledGenres = filteredGenres.sort(() => 0.5 - Math.random());
-      const wrongChoices = shuffledGenres.slice(0, 3); // Get 3 wrong choices
-
-      // For multiple correct genres, pick one as the correct answer
-      const correctGenre = correctGenres[Math.floor(Math.random() * correctGenres.length)];
-
-      // Combine correct genre and wrong choices
-      const allChoices = [correctGenre, ...wrongChoices];
-
-      // Shuffle all choices
-      const shuffledChoices = allChoices.sort(() => 0.5 - Math.random());
-
-      return shuffledChoices;
-    } catch (error) {
-      console.error('Error generating choices:', error);
-      return [];
-    }
-  };
-
-  const handleGuess = async (userGuess) => {
-    console.log('User guessed:', userGuess);
-    console.log('Correct genre(s):', currentSong.genres);
-
-    const correctGenres = currentSong.genres.split(';').map((g) => g.trim().toLowerCase());
-    const userGuessLower = userGuess.trim().toLowerCase();
-
-    if (correctGenres.includes(userGuessLower)) {
-      console.log('Guess is correct');
-      setScore(score + 1);
-      // Update user stats if signed in
-      if (isSignedIn) {
-        console.log('Updating user stats in Supabase');
-        await updateUserStats();
-      }
-      fetchSong(difficulty);
-    } else {
-      console.log('Guess is incorrect');
-      // Game over logic
-      router.push(`/game-over?score=${score}&difficulty=${difficulty}`);
-    }
-  };
-
-  const submitAnswer = async () => {
-    if (!isSignedIn) {
-      console.error('User is not signed in');
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/submitsolve', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: user.id, input: userInput }),
-      });
-
-      const result = await response.json();
-
-      if (result.success && result.message === 'Correct') {
-        console.log('Answer is correct');
-        setScore(score + 1);
-        await updateUserStats();
-        setUserInput('');
-        fetchSong(difficulty);
-      } else {
-        console.log('Answer is incorrect');
-        router.push(`/game-over?score=${score}&difficulty=${difficulty}`);
-      }
-    } catch (error) {
-      console.error('Error submitting answer:', error);
-    }
-  };
-
-  const updateUserStats = async () => {
-    const columnToUpdate = {
-      easy: 'easy_solves',
-      medium: 'medium_solves',
-      hard: 'hard_solves',
-      'legend': 'legend_solves',
-    }[difficulty];
-
-    const highScoreColumn = {
-      easy: 'high_easy',
-      medium: 'high_medium',
-      hard: 'high_hard',
-      'legend': 'high_legend',
-    }[difficulty];
-
-    // Fetch current user data
-    const { data: userData, error } = await supabase
-      .from('Users')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching user data:', error);
-      return;
-    }
-
-    const updates = {};
-    updates[columnToUpdate] = (userData[columnToUpdate] || 0) + 1;
-
-    if (score + 1 > (userData[highScoreColumn] || 0)) {
-      updates[highScoreColumn] = score + 1;
-    }
-
-    const { error: updateError } = await supabase
-      .from('Users')
-      .update(updates)
-      .eq('id', user.id);
-
-    if (updateError) {
-      console.error('Error updating user stats:', updateError);
-    } else {
-      console.log('User stats updated:', updates);
-    }
-  };
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen rainbow-background text-white">
-      <h1 className="text-2xl font-bold mb-4">Guess the Genre ({difficulty})</h1>
-      {currentSong && (
+      <h1 className="text-2xl font-bold mb-4">Guess the Genre ({diff})</h1>
+      {audioUrl && (
         <>
-          <audio src={currentSong.url} controls autoPlay />
-          {difficulty === 'legend' ? (
+          <audio src={audioUrl} controls autoPlay />
+          {diff === 'legend' ? (
             <div className="mt-4">
               <input
                 type="text"
@@ -314,17 +114,29 @@ export default function GamePage() {
                 value={userInput}
                 onChange={(e) => setUserInput(e.target.value)}
               />
-              <Button onClick={submitAnswer} className="ml-2">
+              <Button onClick={handleSubmit} className="ml-2">
                 Submit
               </Button>
             </div>
           ) : (
             <div className="mt-4">
-              {choices.map((genre) => (
-                <Button key={genre} onClick={() => handleGuess(genre)} className="m-2">
-                  {genre}
+              {choices.map((choice) => (
+                <Button
+                  key={choice}
+                  onClick={() => handleToggleChoice(choice)}
+                  className={`m-2 ${selectedChoices.includes(choice) ? 'bg-blue-500' : ''}`} // Highlight selected
+                  disabled={selectedChoices.length >= numChoices && !selectedChoices.includes(choice)} // Disable other buttons if max is reached
+                >
+                  {choice}
                 </Button>
               ))}
+              {selectedChoices.length === numChoices && (
+                <div className="mt-4 flex justify-center">
+                  <Button className="m-2" onClick={handleSubmit}>
+                    Submit
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </>
