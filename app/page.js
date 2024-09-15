@@ -8,12 +8,7 @@ import { Button } from '@/components/ui/button';
 
 export default function GameLandingPage() {
   const router = useRouter();
-  const { isSignedIn } = useUser();
-
-  useEffect(() => {
-    console.log('GameLandingPage mounted');
-    console.log('User is signed in:', isSignedIn);
-  }, [isSignedIn]);
+  const { isSignedIn, user } = useUser();
 
   const handlePlay = () => {
     console.log('Play button clicked');
@@ -24,6 +19,36 @@ export default function GameLandingPage() {
     console.log('Sign out button clicked');
     router.push('/'); // Redirect to the login page after sign-out
   };
+
+  const handleSignedInUser = async () => {
+    try {
+      const response = await fetch('/api/signedon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Proper object structure for JSON.stringify
+        body: JSON.stringify({ id: user.id, name: user.firstName }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('Success:', result.message, result.user);
+      } else {
+        console.error('Error:', result.error);
+      }
+    } catch (error) {
+      console.error('Error while making the API request:', error);
+    }
+  };
+
+  // Use useEffect to call the API when the user is signed in
+  useEffect(() => {
+    if (isSignedIn && user) {
+      handleSignedInUser();
+    }
+  }, [isSignedIn]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen rainbow-background text-white">
