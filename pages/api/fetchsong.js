@@ -1,15 +1,42 @@
 import { supabase } from '../../lib/supabaseClient';
 
-const easy_genres = [
-    'Electronic',
-    'Country',
-    'Classical',
-    'Reggae',
-    'Jazz',
-    'Hip-Hop',
-    'Rock',
-    'Pop'
-];
+const genres = {
+    'easy' : [
+        'electronic',
+        'country',
+        'classical',
+        'reggae',
+        'jazz',
+        'hip-hop',
+        'rock',
+        'pop'
+    ],
+
+    'medium' : [
+        'electronic',
+        'country',
+        'classical',
+        'reggae',
+        'jazz',
+        'hip-hop',
+        'rock',
+        'pop'
+    ],
+}
+
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) { 
+   
+        // Generate random number 
+        var j = Math.floor(Math.random() * (i + 1));
+                   
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+       
+    return array;
+ }
 
 // Request new song from backend
 export default async function handler(req, res) {
@@ -55,6 +82,29 @@ export default async function handler(req, res) {
             .from('Users')
             .update({"current_correct": correct_song.genres})
             .eq('id', data['id']);
+
+            // easy -> 4, med -> 6, hard -> 8
+            const numGenreChoices = difficulty == 'easy' ? 4 : (difficulty == 'medium' ? 6 : 8);
+            const correctGenres = correct_song.genres.split(';');
+            console.log(correctGenres);
+            let genreChoices = new Array();
+            correctGenres.forEach(genre => {
+                genreChoices.push(genre);
+                console.log(genre);
+            });
+            for (let i = correctGenres.length; i < numGenreChoices; i++) {
+                let randGenre = genres[difficulty][Math.floor(Math.random() * genres[difficulty].length)];
+                while (genreChoices.includes(randGenre)) {
+                    randGenre = genres[difficulty][Math.floor(Math.random() * genres[difficulty].length)];
+                }
+                genreChoices.push(randGenre);
+            }
+            // Randomize order to prevent deterministic answer
+            genreChoices = shuffleArray(genreChoices);
+            console.log(genreChoices);
+
+            // Return choices
+            res.status(200).json({ success: true, choices: genreChoices, audio: correct_song.url });
         } else {
             res.status(500).json({ success: false, message: 'No songs found' });
         }
