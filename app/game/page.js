@@ -40,6 +40,8 @@ export default function GamePage() {
   useEffect(() => {
     const difficulty = searchParams.get('difficulty') || '';
     setDiff(difficulty);
+    console.log(difficulty);
+    console.log(diff);
     setNumChoices(diff === 'easy' ? 1 : 2);
     console.log(numChoices);
     setFirst(searchParams.get('first') == true ? 1 : 0);
@@ -47,7 +49,7 @@ export default function GamePage() {
     if (isSignedIn)
       fetchSong();
 
-  }, [searchParams, isSignedIn]);
+  }, [searchParams, isSignedIn, diff]);
 
   // Handle button selection (toggle logic)
   const handleToggleChoice = (choice) => {
@@ -89,6 +91,7 @@ export default function GamePage() {
           fetchSong();
         } else {
           console.log('Answer is incorrect');
+          console.log(diff);
           router.push(`/game-over?score=${score}&difficulty=${diff}`);
         }
       } catch (error) {

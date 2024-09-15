@@ -37,6 +37,7 @@ export default async function handler(req, res) {
             console.log(diffSolves);
             
             let newDiff = user.current_difficulty;
+            console.log(newDiff);
             if (user.current_difficulty.includes("increasing")) {
                 if (newSolves % 3 == 0) {
                     if (user.current_difficulty.includes("easy")) {
@@ -84,6 +85,7 @@ export default async function handler(req, res) {
             }
 
             console.log("Reset on fail.");
+            console.log(diffUpdate);
 
             const { data: newUser, error: insertError } = await supabase
             .from('Users')
