@@ -38,9 +38,9 @@ export default function GameOverPage() {
         <Button onClick={handlePlayAgain} className="w-full bg-green-500">
           Play Again
         </Button>
-        <Button onClick={handleLeaderboard} className="w-full bg-blue-500">
+	  {   /*     <Button onClick={handleLeaderboard} className="w-full bg-blue-500">
           View Leaderboard
-        </Button>
+        </Button> */}
       </div>
       {isSignedIn && (
         <div className="absolute top-4 right-4">

@@ -252,19 +252,19 @@ export default function GamePage() {
   };
 
   const updateUserStats = async () => {
-    const columnToUpdate = {
+    /*const columnToUpdate = {
       easy: 'easy_solves',
       medium: 'medium_solves',
       hard: 'hard_solves',
       'music-legend': 'legend_solves',
-    }[difficulty];
+    }[difficulty];*/
 
-    const highScoreColumn = {
-      easy: 'high_easy',
-      medium: 'high_medium',
-      hard: 'high_hard',
-      'music-legend': 'high_legend',
-    }[difficulty];
+    //const highScoreColumn = {
+      //easy: 'high_easy',
+      //medium: 'high_medium',
+      //hard: 'high_hard',
+      //'music-legend': 'high_legend',
+    //}[difficulty];
 
     // Fetch current user data
     const { data: userData, error } = await supabase

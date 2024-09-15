@@ -53,7 +53,7 @@ export default function GamePage() {
 
       if (diff !== 'music-legend') {
         // For multiple-choice difficulties, generate choices
-        const choices = await generateChoices(songData.genre, diff);
+        const choices = await generateChoices(songData.genres.lower(), diff);
         setChoices(choices);
       }
 
@@ -85,7 +85,7 @@ export default function GamePage() {
       const wrongChoices = shuffledGenres.slice(0, 3); // Get 3 wrong choices
 
       // Combine correct genre and wrong choices
-      const allChoices = [correctGenre, ...wrongChoices];
+      const allChoices = [correctGenre.lower(), ...wrongChoices];
 
       // Shuffle all choices
       const shuffledChoices = allChoices.sort(() => 0.5 - Math.random());

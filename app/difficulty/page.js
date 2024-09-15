@@ -24,7 +24,7 @@ export default function DifficultySelectionPage() {
         <Button onClick={() => handleDifficultySelect('easy')} className="w-full bg-green-500">
           Easy
         </Button>
-        <Button onClick={() => handleDifficultySelect('medium')} className="w-full bg-yellow-500">
+	  {/*<Button onClick={() => handleDifficultySelect('medium')} className="w-full bg-yellow-500">
           Medium
         </Button>
         <Button onClick={() => handleDifficultySelect('hard')} className="w-full bg-orange-500">
@@ -32,7 +32,7 @@ export default function DifficultySelectionPage() {
         </Button>
         <Button onClick={() => handleDifficultySelect('music-legend')} className="w-full bg-red-500">
           Music Legend
-        </Button>
+        </Button>*/}
       </div>
     </div>
   );
