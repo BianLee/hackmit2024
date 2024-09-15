@@ -28,7 +28,7 @@ export default function GamePage() {
     console.log('Fetching song for difficulty:', diff);
     try {
       // Fetch songs of the selected difficulty
-      const { data: songs, error: error } = await supabase
+      const { data: songs, error } = await supabase
         .from('Songs')
         .select('*')
         .eq('difficulty', diff);
@@ -70,41 +70,40 @@ export default function GamePage() {
         .select('genre')
         .eq('difficulty', diff)
         .neq('genre', correctGenre); // Exclude the correct genre
-  
+
       if (error) {
         console.error('Error fetching genres from Supabase:', error);
         return [];
       }
-  
+
       // Extract genres and remove duplicates
       const genres = genresData.map((item) => item.genre);
       const uniqueGenres = [...new Set(genres)];
-  
+
       // Shuffle and pick random genres
       const shuffledGenres = uniqueGenres.sort(() => 0.5 - Math.random());
       const wrongChoices = shuffledGenres.slice(0, 3); // Get 3 wrong choices
-  
+
       // Combine correct genre and wrong choices
       const allChoices = [correctGenre, ...wrongChoices];
-  
+
       // Shuffle all choices
       const shuffledChoices = allChoices.sort(() => 0.5 - Math.random());
-  
+
       return shuffledChoices;
     } catch (error) {
       console.error('Error generating choices:', error);
       return [];
     }
   };
-  
 
   const handleGuess = async (userGuess) => {
     console.log('User guessed:', userGuess);
     console.log('Correct genre(s):', currentSong.genre);
-  
+
     const correctGenres = currentSong.genre.split(',').map((g) => g.trim().toLowerCase());
     const userGuessLower = userGuess.trim().toLowerCase();
-  
+
     if (correctGenres.includes(userGuessLower)) {
       console.log('Guess is correct');
       setScore(score + 1);
@@ -120,7 +119,6 @@ export default function GamePage() {
       router.push(`/game-over?score=${score}&difficulty=${difficulty}`);
     }
   };
-  
 
   const updateUserStats = async () => {
     const columnToUpdate = {
